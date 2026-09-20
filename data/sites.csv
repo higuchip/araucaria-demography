@@ -1,0 +1,9 @@
+code,nome,municipio,lat,lon,parcelas,area_parcela_m2,altitude_m_srtm,foco
+PB1,Pedras Brancas I,Lages,-27.86300,-50.19022,50,200,1004,TRUE
+PB2,Pedras Brancas II,Lages,-27.85409,-50.16612,50,200,1065,FALSE
+PAI,Painel,Painel,-27.92805,-49.94721,49,200,1361,FALSE
+BJS,Bom Jardim da Serra,Bom Jardim da Serra,-28.33812,-49.73763,50,200,1346,FALSE
+Vargem,Vargem,Sao Jose do Cerrito,-27.55762,-50.95747,48,200,729,FALSE
+Epagri,Amola Faca,Sao Jose do Cerrito,-27.75132,-50.42995,50,200,971,FALSE
+Alu,Aluvial,Lages,-27.84374,-50.23332,48,200,887,FALSE
+PARNAMUL,Parque Natural Municipal,Lages,-27.79185,-50.34759,25,400,940,FALSE

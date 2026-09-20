@@ -1,0 +1,18 @@
+Data license
+SPDX-License-Identifier: CC-BY-4.0
+
+The CSV datasets in this directory are licensed under the Creative Commons
+Attribution 4.0 International License (CC BY 4.0).
+
+Attribution: Pedro Higuchi and the contributing authors of the associated study,
+"Adult longevity and a persistent seedling bank in Araucaria angustifolia:
+evidence from historically logged forests".
+
+When sharing or adapting these datasets, give appropriate credit, provide a link
+to the license, and indicate whether changes were made, as required by the license.
+
+License summary: https://creativecommons.org/licenses/by/4.0/
+Full legal terms: https://creativecommons.org/licenses/by/4.0/legalcode.en
+
+This license applies to the datasets. The R scripts are covered by the MIT
+License in the repository root.
