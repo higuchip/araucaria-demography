@@ -95,8 +95,13 @@ print(suppressWarnings(wilcox.test(dap08 ~ morreu, data=fate)))
 # ------------------------------------------------------------
 pl <- ar[ano==2008 & status=="viva",
          .(N0=.N, BA0=sum(ab_cm2,na.rm=TRUE)), by=plot]
-mort <- ar[status=="morta", .(mortos=uniqueN(arvore)), by=plot]
+# Restrict deaths to the same 2008 cohort used in the denominator.
+cohort08 <- aw[viv08]
+stopifnot(!anyNA(cohort08[["2021"]]))
+mort <- cohort08[, .(mortos=sum(get("2021")=="morta")), by=plot]
 pl <- merge(pl, mort, by="plot", all.x=TRUE); pl[is.na(mortos),mortos:=0]
+stopifnot(sum(pl$N0)==nrow(cohort08), sum(pl$mortos)==9L,
+          all(pl$mortos>=0 & pl$mortos<=pl$N0))
 pl[, taxa := mortos/N0]
 cat("\n==== Mortalidade denso-dependente (Araucaria, ", nrow(pl)," parcelas) ====\n", sep="")
 cat(sprintf("Spearman taxa_mort ~ densidade conspecifica: rho=%+.3f p=%.3f\n",
