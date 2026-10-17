@@ -92,32 +92,33 @@ run_derived_analyses<-function(matrices,results,SN,risk,dens,adult_density,DA,ro
  write_table(rbindlist(lapply(names(n0s),function(k)data.table(vector=k,stage=names(n0s[[k]]),density_ha=n0s[[k]]))),"transient_initial_vectors")
  
  project<-function(M,lambda,n0){
-  x<-matrix(n0/sum(n0),4,N);best<-best50<-best20<-rep(1,N);peak<-rep(0L,N)
-  old_best<-rep(-Inf,N);minimum<-rep(1,N);values<-list();checks<-integer(0)
-  for(t in 1:400){
-   nx<-matrix(0,4,N)
-   for(j in 1:4)for(i in 1:4)nx[i,]<-nx[i,]+M[i,j,]*x[j,]
-   x<-sweep(nx,2,lambda,"/");total<-colSums(x)
-   stopifnot(all(is.finite(total)),all(total>=0))
-   improved<-total>best+1e-12;peak[improved]<-t;best<-pmax(best,total)
-   old_best<-pmax(old_best,total);minimum<-pmin(minimum,total)
-   if(t<=20)best20<-pmax(best20,total)
-   if(t<=50)best50<-pmax(best50,total)
-   if(t%in%c(1,5,10,20,50,100,200,400)){
-    values[[as.character(t)]]<-total
-    if(t==5){
-     for(k in 1:min(12,N)){
-      checkx<-n0/sum(n0)
-      for(tt in 1:5)checkx<-(M[,,k]/lambda[k])%*%checkx
-      stopifnot(max(abs(as.numeric(checkx)-x[,k]))<1e-10)
-     }
-    }
+  initial<-n0/sum(n0);best<-best50<-best20<-rep(1,N);peak<-rep(0L,N)
+  old_best<-rep(-Inf,N);minimum<-rep(1,N);total<-numeric(N)
+  years<-c(1L,5L,10L,20L,50L,100L,200L,400L)
+  values<-matrix(NA_real_,length(years),N,dimnames=list(as.character(years),NULL))
+  for(k in seq_len(N)){
+   # pop.projection stores the initial vector, so 401 columns cover years 0-400.
+   projection<-popbio::pop.projection(M[,,k]/lambda[k],initial,iterations=401L)
+   trajectory<-projection$pop.sizes
+   stopifnot(length(trajectory)==401L,all(is.finite(trajectory)),all(trajectory>=0),
+             abs(trajectory[1]-1)<1e-12)
+   projected<-trajectory[-1L]
+   running_best<-cummax(c(1,projected))
+   improved<-which(projected>head(running_best,-1L)+1e-12)
+   if(length(improved))peak[k]<-tail(improved,1L)
+   best[k]<-max(1,projected);best50[k]<-max(1,projected[1:50]);best20[k]<-max(1,projected[1:20])
+   old_best[k]<-max(projected);minimum[k]<-min(1,projected);total[k]<-tail(projected,1L)
+   values[,k]<-trajectory[years+1L]
+   if(k<=12L){
+    checkx<-initial
+    for(tt in 1:5)checkx<-(M[,,k]/lambda[k])%*%checkx
+    stopifnot(max(abs(as.numeric(checkx)-projection$stage.vectors[,6]))<1e-10)
    }
   }
   stopifnot(all(best>=1),all(best50<=best+1e-10),all(best20<=best50+1e-10))
   list(draws=data.table(draw=seq_len(N),maxamp_0_400=best,maxamp_0_50=best50,maxamp_0_20=best20,
    peak_year_0_400=peak,maxamp_1_400_legacy_definition=old_best,minamp_0_400=minimum,relative_total_400=total),
-   trajectory=rbindlist(lapply(names(values),function(t){v<-qs(values[[t]]);data.table(year=as.integer(t),median=v[1],lower=v[2],upper=v[3])})))
+   trajectory=rbindlist(lapply(seq_along(years),function(j){v<-qs(values[j,]);data.table(year=years[j],median=v[1],lower=v[2],upper=v[3])})))
  }
  transients<-list();trajectories<-list()
  for(s in names(matrices))for(k in names(n0s)){
@@ -137,6 +138,6 @@ run_derived_analyses<-function(matrices,results,SN,risk,dens,adult_density,DA,ro
  write_table(rbindlist(trajectories),"transient_trajectory_summary")
 
  write_table(data.table(check=c("annual_survival_reconstructs_observed_intervals","mortality_curve_monotone", "interval_lambda_threshold_agree",
- "transient_batched_vs_individual_projection","transient_includes_initial_time","shared_matrices_for_all_analyses"),passed=TRUE),"derived_verification")
+ "transient_package_vs_matrix_projection","transient_includes_initial_time","shared_matrices_for_all_analyses"),passed=TRUE),"derived_verification")
  invisible(TRUE)
 }
