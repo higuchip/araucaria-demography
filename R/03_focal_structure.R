@@ -9,7 +9,7 @@ dir.create(file.path(base, "out"), showWarnings = FALSE)
 ad <- fread(file.path(base, "data", "focal_arboreo.csv"))
 ad[, ano := as.integer(ano)]
 ad[, tree_id := paste(transecto, parcela, arvore, sep = "_")]
-cat("==== ARBOREO (comunidade) ====\n")
+cat("==== ARBOREO (inventario focal) ====\n")
 cat("registros:", nrow(ad), " especies:", uniqueN(ad$especie),
     " arvores:", uniqueN(ad$tree_id),
     " censos:", paste(sort(unique(ad$ano)), collapse = "/"), "\n")
@@ -63,15 +63,14 @@ ad[, plot := paste(transecto,parcela)]
 ar <- ad[especie=="Araucaria angustifolia"]
 ha <- 1   # 50 x 200 m2 = 1 ha
 
-traj <- function(x, lab){
+traj <- function(x){
   t <- x[status %in% c("viva","recrutamento"),
          .(N=.N, DAP_medio=mean(dap_cm,na.rm=TRUE),
            BA_m2ha=sum(ab_cm2,na.rm=TRUE)/10000/ha), by=ano][order(ano)]
-  assign(if(lab=="ARAUCARIA") "adult_structure_araucaria" else "adult_structure_community",copy(t),envir=tables)
-  cat("\n==== Trajetoria",lab,"(densidade, DAP medio, AB) ====\n"); print(t)
+  tables$adult_structure_araucaria <- copy(t)
+  cat("\n==== Trajetoria ARAUCARIA (densidade, DAP medio, AB) ====\n"); print(t)
 }
-traj(ar, "ARAUCARIA")
-traj(ad, "POVOAMENTO (todas spp)")
+traj(ar)
 
 # ------------------------------------------------------------
 # (2) Mortalidade assimetrica por tamanho - Araucaria
@@ -111,22 +110,9 @@ cat(sprintf("Spearman taxa_mort ~ AB conspecifica:        rho=%+.3f p=%.3f\n",
             cor(pl$BA0,pl$taxa,method="spearman"),
             suppressWarnings(cor.test(pl$BA0,pl$taxa,method="spearman"))$p.value))
 
-# ------------------------------------------------------------
-# (4) Spatial density-size relationship: community plots in 2008
-#   An among-plot relationship, not a temporal self-thinning trajectory.
-# ------------------------------------------------------------
-st <- ad[ano==2008 & status=="viva",
-         .(N=.N, DAPm=mean(dap_cm,na.rm=TRUE)), by=plot][N>=3]
-fit <- lm(log(N) ~ log(DAPm), data=st)
-cat("\n==== Linha de autodesbaste (povoamento, ", nrow(st)," parcelas) ====\n", sep="")
-cat(sprintf("log(N) ~ log(DAP medio): inclinacao = %.2f  p=%.3f  R2=%.2f\n",
-            coef(fit)[2], summary(fit)$coefficients[2,4], summary(fit)$r.squared))
-cat("Spatial association; not a temporal self-thinning slope.\n")
-
 fate[,dbh_class:=cut(dap08,c(5,15,25,35,Inf),right=FALSE)]
 tables$Table_S2_2 <- fate[,.(n=.N,deaths=sum(morreu),mortality_percent=100*mean(morreu)),by=dbh_class]
 tables$plot_mortality <- pl
-tables$Table_S2_4 <- data.table(slope=coef(fit)[2],p=summary(fit)$coefficients[2,4],R2=summary(fit)$r.squared)
 
 ar <- ad[especie=="Araucaria angustifolia"]
 ar[, dap_cm := as.numeric(dap_cm)]; ar[, id := paste(transecto,parcela,arvore)]
@@ -155,8 +141,9 @@ print(gm)
 tables$adult_diameter_classes <- dd
 tables$adult_diameter_growth_mortality <- gm
 
-tables$Table_S2_1 <- merge(tables$adult_structure_araucaria,tables$adult_structure_community,
- by="ano",suffixes=c("_araucaria","_community"))
+tables$Table_S2_1 <- copy(tables$adult_structure_araucaria)
+setnames(tables$Table_S2_1,c("N","DAP_medio","BA_m2ha"),
+ c("N_araucaria","DAP_medio_araucaria","BA_m2ha_araucaria"))
 tables$Table_S2_3 <- rbindlist(lapply(c("N0","BA0"),function(v){
  test <- suppressWarnings(cor.test(pl[[v]],pl$taxa,method="spearman"))
  data.table(predictor=if(v=="N0") "Initial conspecific density" else "Initial conspecific basal area",

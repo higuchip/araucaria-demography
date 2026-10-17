@@ -4,8 +4,8 @@ The CSV datasets are licensed under [CC BY 4.0](LICENSE).
 
 The files contain the focal inventories, regional araucaria records, and remnant
 attributes, standardized from the field records. The focal adult inventory retains
-all species for the community-level structural analysis and species-abundance
-table. The demographic model uses the ***Araucaria angustifolia*** subset.
+all species for the species-abundance table (Table S1.2). The demographic and
+structural analyses use the ***Araucaria angustifolia*** subset.
 
 Run the analyses with `R/run_all.R`.
 

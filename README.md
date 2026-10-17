@@ -20,7 +20,7 @@ Input data are in `data/`; variables and sampling areas are described in the [da
 
 The `out/` folder is created locally when the scripts are run and is not included in the repository. It contains:
 
-- `out/tables/`: Tables 1–2 and Supplementary Tables S1.1, S1.2, and S2.1–S2.4 (CSV).
+- `out/tables/`: Tables 1–2 and Supplementary Tables S1.1, S1.2, and S2.1–S2.3 (CSV).
 - `out/figures/`: Figures 1–6 and Supplementary Figure S1 (TIFF, 600 dpi).
 
 ## Sources and licenses

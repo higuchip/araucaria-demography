@@ -28,9 +28,9 @@ tables$Table_2 <- data.table::rbindlist(list(tab2,amp))
 data.table::setcolorder(tables$Table_2,c("parameter","unit","median","lower","upper","metric"))
 output <- file.path("out","tables")
 dir.create(output,recursive=TRUE,showWarnings=FALSE)
-for(name in c("Table_1","Table_2","Table_S1_1","Table_S1_2","Table_S2_1","Table_S2_2","Table_S2_3","Table_S2_4")){
+for(name in c("Table_1","Table_2","Table_S1_1","Table_S1_2","Table_S2_1","Table_S2_2","Table_S2_3")){
  data.table::fwrite(tables[[name]],file.path(output,paste0(name,".csv")),na="NA")
 }
 
-cat("\nFinished: eight CSV tables and seven TIFF figures (600 dpi) in out/.\n")
+cat("\nFinished: seven CSV tables and seven TIFF figures (600 dpi) in out/.\n")
 invisible(tables)
