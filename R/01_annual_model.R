@@ -107,11 +107,13 @@ eigen_lambda<-function(A)max(Re(eigen(A,only.values=TRUE)$values))
 matrix_metrics<-function(A){
  ea<-eigen.analysis(A);el<-ea$elasticities;F<-A*0;F[1,4]<-A[1,4];U<-A-F
  stopifnot(all(A>=0),all(colSums(U)<=1+1e-10),abs(sum(el)-1)<1e-8)
- NN<-solve(diag(4)-U);R0<-eigen_lambda(F%*%NN)
+ NN<-solve(diag(4)-U)
+ R0<-Rage::net_repro_rate(matU=U,matF=F)
+ T_R0<-Rage::gen_time(matU=U,matF=F,method="R0")
  NP<-solve(diag(3)-U[1:3,1:3]);h<-as.numeric(U[4,1:3]%*%NP[,1])
  # At lambda=1: required annual adult death probability = effective recruitment * P(reach A).
  qstar<-A[1,4]*h
- c(lambda=ea$lambda1,R0=R0,T_R0=log(R0)/log(ea$lambda1),T_age_diff=1/el[1,4],
+ c(lambda=ea$lambda1,R0=R0,T_R0=T_R0,T_age_diff=1/el[1,4],
   adult_residence=1/-log(A[4,4]),adult_expected_years=1/(1-A[4,4]),coast10=log(.1)/log(A[4,4]),coast50=log(.5)/log(A[4,4]),C1_residence=NN[1,1],
   reach_A_probability=h,conditional_years_to_A=as.numeric(U[4,1:3]%*%(NP%*%NP)[,1])/h,
   el_adult=el[4,4],el_stasis=sum(diag(el)[1:3]),el_advance=el[2,1]+el[3,2]+el[4,2]+el[4,3],
@@ -127,9 +129,10 @@ for(s in scenarios){
   A<-build_matrix(i,s,fit);Amat[,,i]<-A;mm[[i]]<-matrix_metrics(A)
   if(i<=12L){
     F<-A*0;F[1,4]<-A[1,4];U<-A-F
-    stopifnot(abs(Rage::gen_time(U,F,method="R0")-mm[[i]]['T_R0'])<1e-7)
+    # Check the package results against their defining equations.
+    stopifnot(abs(log(mm[[i]]['R0'])/log(mm[[i]]['lambda'])-mm[[i]]['T_R0'])<1e-7)
     stopifnot(abs(Rage::gen_time(U,F,method="age_diff")-mm[[i]]['T_age_diff'])<1e-7)
-    stopifnot(abs(Rage::net_repro_rate(U,F)-mm[[i]]['R0'])<1e-7)
+    stopifnot(abs(eigen_lambda(F%*%solve(diag(4)-U))-mm[[i]]['R0'])<1e-7)
     if(mm[[i]]['mortality_threshold']<1){
       B<-A;B[4,4]<-1-mm[[i]]['mortality_threshold'];stopifnot(abs(eigen_lambda(B)-1)<1e-8)
     }
